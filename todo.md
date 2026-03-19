@@ -126,22 +126,22 @@ shop-agent/
    - [x] 初始化数据库连接
 
 2. **订单服务**
-   - [ ] 创建`app/services/order_service.py`
-   - [ ] 实现订单查询函数`get_order_status(order_id)`
-   - [ ] 实现模糊查询`search_orders_by_product(product_name)`
+   - [x] 创建`app/services/order_service.py`
+   - [x] 实现订单查询函数`get_order_status(order_id)`
+   - [x] 实现模糊查询`search_orders_by_product(product_name)`
 
 3. **Tool Calling机制**
-   - [ ] 研究大模型的Tool Calling格式（OpenAI函数调用）
-   - [ ] 在`app/agents/order_agent.py`中实现：
+   - [x] 研究大模型的Tool Calling格式（OpenAI函数调用）
+   - [x] 在`app/agents/order_agent.py`中实现：
      - 工具定义（函数名、参数、描述）
      - 工具调用解析
      - 执行工具并返回结果
-   - [ ] 集成到对话流程中
+   - [x] 集成到对话流程中
 
 4. **测试订单查询**
-   - [ ] 准备示例订单数据
-   - [ ] 测试工具调用："查询快递单号为12345的快递"
-   - [ ] 测试自然语言查询："我购买的键盘到哪了"
+   - [x] 准备示例订单数据
+   - [x] 测试工具调用：查询订单状态功能
+   - [x] 测试自然语言查询：搜索商品订单功能
 
 ### 第四阶段：RAG实现（2-3天）
 **目标**：实现产品推荐功能，基于向量检索

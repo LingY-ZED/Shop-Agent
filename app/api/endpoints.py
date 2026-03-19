@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from app.api.models import ChatRequest, ChatResponse
 from app.services.llm_service import llm_service
+from app.agents.order_agent import order_agent
 
 router = APIRouter()
 
@@ -47,6 +48,51 @@ async def chat(request: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"聊天服务错误: {str(e)}")
+
+
+@router.post("/chat/order", response_model=ChatResponse)
+async def chat_order(request: ChatRequest):
+    """
+    订单查询聊天端点
+
+    处理用户订单相关对话请求，使用Tool Calling自动查询订单状态。
+    支持：订单号查询、快递单号查询、商品名称搜索、用户订单历史查询。
+    """
+    try:
+        # 获取最后一条用户消息
+        user_message = None
+        for msg in reversed(request.messages):
+            if msg.role == "user":
+                user_message = msg.content
+                break
+
+        if not user_message:
+            raise HTTPException(status_code=400, detail="未找到用户消息")
+
+        # 构建对话历史（用于多轮对话）
+        history = []
+        for msg in request.messages[:-1]:
+            if msg.role in ["user", "assistant"]:
+                history.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+
+        # 调用OrderAgent处理
+        result = await order_agent.process(user_message, history)
+
+        return ChatResponse(
+            content=result["content"],
+            role="assistant",
+            finish_reason="stop",
+            tool_used=result.get("tool_used", False),
+            tool_name=result.get("tool_name")
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"订单查询服务错误: {str(e)}")
 
 
 @router.get("/chat/history")

@@ -74,11 +74,13 @@ class LLMService:
     ) -> Dict[str, Any]:
         """带函数调用的聊天补全"""
         try:
+            # 使用 tools 参数 (OpenAI 最新格式)
+            tool_choice = {"type": "function", "function": {"name": function_call}} if function_call != "auto" else function_call
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                functions=functions,
-                function_call=function_call,
+                tools=functions,
+                tool_choice=tool_choice,
                 **kwargs
             )
 
@@ -86,15 +88,15 @@ class LLMService:
             result = {
                 "content": message.content,
                 "role": message.role,
-                "finish_reason": message.finish_reason,
+                "finish_reason": response.choices[0].finish_reason,
                 "usage": response.usage.dict() if response.usage else None,
             }
 
-            # 检查是否有函数调用
-            if message.function_call:
+            # 检查是否有函数调用 (tool_calls)
+            if message.tool_calls:
                 result["function_call"] = {
-                    "name": message.function_call.name,
-                    "arguments": message.function_call.arguments
+                    "name": message.tool_calls[0].function.name,
+                    "arguments": message.tool_calls[0].function.arguments
                 }
 
             return result
