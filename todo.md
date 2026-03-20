@@ -148,28 +148,28 @@ shop-agent/
 
 #### 任务清单：
 1. **产品数据准备**
-   - [ ] 收集或生成示例产品数据（名称、描述、类别、价格等）
-   - [ ] 保存到`data/products.csv`
+   - [x] 收集或生成示例产品数据（名称、描述、类别、价格等）
+   - [x] 保存到`data/products.csv`
    - [ ] 设计产品数据库表（可选）
 
 2. **向量嵌入服务**
-   - [ ] 创建`app/services/embedding_service.py`
-   - [ ] 选择嵌入模型：本地`sentence-transformers`或OpenAI Embeddings
-   - [ ] 实现文本到向量的转换函数
+   - [x] 创建`app/services/embedding_service.py`
+   - [x] 选择嵌入模型：使用DeepSeek Embeddings (OpenAI兼容API)
+   - [x] 实现文本到向量的转换函数
 
 3. **向量数据库**
-   - [ ] 创建`app/services/vector_store.py`
-   - [ ] 初始化ChromaDB/FAISS
-   - [ ] 实现产品数据导入：读取CSV → 生成嵌入 → 存储向量
-   - [ ] 实现相似性检索函数`search_similar_products(query, k=5)`
+   - [x] 创建`app/services/vector_store.py`
+   - [x] 初始化ChromaDB/FAISS
+   - [x] 实现产品数据导入：读取CSV → 生成嵌入 → 存储向量
+   - [x] 实现相似性检索函数`search_similar_products(query, k=5)`
 
 4. **RAG Agent**
-   - [ ] 创建`app/agents/rag_agent.py`
-   - [ ] 实现检索增强生成流程：
+   - [x] 创建`app/agents/rag_agent.py`
+   - [x] 实现检索增强生成流程：
      1. 用户查询 → 向量检索 → 相关产品
-     2. 构建提示词，包含产品信息
-     3. 调用大模型生成推荐
-   - [ ] 集成到对话API
+     - [x] 构建提示词，包含产品信息
+     - [x] 调用大模型生成推荐
+   - [x] 集成到对话API
 
 5. **测试RAG功能**
    - [ ] 测试查询："有什么好用的机械键盘？"

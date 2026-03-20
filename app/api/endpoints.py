@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.api.models import ChatRequest, ChatResponse
 from app.services.llm_service import llm_service
 from app.agents.order_agent import order_agent
+from app.agents.rag_agent import rag_agent
 
 router = APIRouter()
 
@@ -99,3 +100,47 @@ async def chat_order(request: ChatRequest):
 async def get_chat_history():
     """获取聊天历史（占位）"""
     return {"message": "聊天历史功能待实现"}
+
+
+@router.post("/chat/product", response_model=ChatResponse)
+async def chat_product(request: ChatRequest):
+    """
+    产品推荐聊天端点
+
+    处理用户产品相关对话请求，使用RAG检索相关产品并生成推荐。
+    """
+    try:
+        # 获取最后一条用户消息
+        user_message = None
+        for msg in reversed(request.messages):
+            if msg.role == "user":
+                user_message = msg.content
+                break
+
+        if not user_message:
+            raise HTTPException(status_code=400, detail="未找到用户消息")
+
+        # 构建对话历史
+        history = []
+        for msg in request.messages[:-1]:
+            if msg.role in ["user", "assistant"]:
+                history.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+
+        # 调用RAG Agent处理
+        result = await rag_agent.process(user_message, history=history)
+
+        return ChatResponse(
+            content=result["content"],
+            role="assistant",
+            finish_reason="stop",
+            tool_used=result.get("tool_used", False),
+            tool_name=result.get("tool_name")
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"产品推荐服务错误: {str(e)}")
