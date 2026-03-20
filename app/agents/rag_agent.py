@@ -50,6 +50,10 @@ class RAGAgent(BaseAgent):
         Returns:
             包含回复内容和检索结果
         """
+        # 确保向量数据库 collection 已初始化
+        if self.vector_store.collection is None:
+            self.vector_store.get_or_create_collection("products")
+
         # 1. 向量检索相关产品
         try:
             products = await self.vector_store.search_similar_products(

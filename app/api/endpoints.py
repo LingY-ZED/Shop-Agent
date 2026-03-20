@@ -4,6 +4,7 @@ from app.api.models import ChatRequest, ChatResponse
 from app.services.llm_service import llm_service
 from app.agents.order_agent import order_agent
 from app.agents.rag_agent import rag_agent
+from app.agents.router_agent import router_agent
 
 router = APIRouter()
 
@@ -100,6 +101,54 @@ async def chat_order(request: ChatRequest):
 async def get_chat_history():
     """获取聊天历史（占位）"""
     return {"message": "聊天历史功能待实现"}
+
+
+@router.post("/chat/auto", response_model=ChatResponse)
+async def chat_auto(request: ChatRequest):
+    """
+    智能聊天端点（统一入口）
+
+    自动识别用户意图并路由到相应的Agent：
+    - 订单查询意图 -> OrderAgent
+    - 产品推荐意图 -> RAGAgent
+    - 其他 -> 基础对话
+    """
+    try:
+        # 获取最后一条用户消息
+        user_message = None
+        for msg in reversed(request.messages):
+            if msg.role == "user":
+                user_message = msg.content
+                break
+
+        if not user_message:
+            raise HTTPException(status_code=400, detail="未找到用户消息")
+
+        # 构建对话历史
+        history = []
+        for msg in request.messages[:-1]:
+            if msg.role in ["user", "assistant"]:
+                history.append({
+                    "role": msg.role,
+                    "content": msg.content
+                })
+
+        # 调用Router Agent自动路由
+        result = await router_agent.process(user_message, history)
+
+        return ChatResponse(
+            content=result["content"],
+            role="assistant",
+            finish_reason="stop",
+            tool_used=result.get("tool_used", False),
+            tool_name=result.get("tool_name"),
+            intent=result.get("intent")
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"智能聊天服务错误: {str(e)}")
 
 
 @router.post("/chat/product", response_model=ChatResponse)

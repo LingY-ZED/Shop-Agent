@@ -24,6 +24,7 @@ class ChatResponse(BaseModel):
     usage: Optional[Dict[str, Any]] = Field(default=None, description="token使用量")
     tool_used: Optional[bool] = Field(default=False, description="是否使用了工具调用")
     tool_name: Optional[str] = Field(default=None, description="使用的工具名称")
+    intent: Optional[str] = Field(default=None, description="识别的用户意图: order_query, product_recommend, general")
 
 
 class HealthResponse(BaseModel):

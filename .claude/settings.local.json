@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X 'POST' 'http://127.0.0.1:8000/api/chat/auto' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{\"\"messages\"\": [{\"\"role\"\": \"\"user\"\", \"\"content\"\": \"\"帮我推荐一下耳机\"\"}]}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/chat/auto -H \"Content-Type: application/json\" -d \"{\"\"messages\"\": [{\"\"role\"\": \"\"user\"\", \"\"content\"\": \"\"帮我推荐一下耳机\"\"}]}\")",
+      "Bash(curl -s http://127.0.0.1:8000/health)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/chat -H \"Content-Type: application/json\" -d \"{\"\"messages\"\": [{\"\"role\"\": \"\"user\"\", \"\"content\"\": \"\"hello\"\"}]}\")"
+    ]
+  }
+}
