@@ -18,10 +18,10 @@ class Settings(BaseSettings):
     siliconflow_api_key: Optional[str] = None
     
     # 数据库配置
-    database_url: str = "sqlite:///./shop_agent.db"
-    
+    database_url: str = "sqlite:///./data/shop_agent.db"
+
     # 向量数据库配置
-    chroma_db_path: str = "./chroma_db"
+    chroma_db_path: str = "./data/chroma_db"
 
     # JWT配置
     jwt_secret_key: str = "your-secret-key-change-in-production"

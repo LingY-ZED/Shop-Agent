@@ -21,12 +21,16 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
     from app.database import init_db
-    from app.services.llm_service import llm_service
+    from app.database.vector_init import init_vector_store
 
+    # 初始化 SQLite 数据库
     init_db()
-    logger.info("数据库已初始化")
+    logger.info("SQLite 数据库已初始化")
+
+    # 初始化向量数据库（如果为空则自动初始化）
+    await init_vector_store()
+
     yield
-    await llm_service.close()
     logger.info("服务已关闭")
 
 
@@ -40,10 +44,10 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # 允许所有域名访问（生产环境应指定具体域名）
+    allow_credentials=True,  # 允许携带 Cookie、Authorization header 等认证信息
+    allow_methods=["*"],  # 允许所有 HTTP 方法（GET、POST、PUT、DELETE 等）
+    allow_headers=["*"],  # 允许所有 HTTP 头（Content-Type、Authorization 等）
 )
 
 # 中间件

@@ -9,6 +9,7 @@ from collections import OrderedDict
 from typing import List, Dict, Any, Optional
 import chromadb
 from app.services.embedding_service import embedding_service
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -66,17 +67,17 @@ class SearchCache:
 class VectorStore:
     """向量数据库服务"""
 
-    def __init__(self, persist_directory: str = "./data/chroma_db"):
+    def __init__(self, persist_directory: str = None):
         """
         初始化向量数据库
 
         Args:
-            persist_directory: 数据库持久化目录
+            persist_directory: 数据库持久化目录（默认为 config.py 中的配置）
         """
-        self.persist_directory = persist_directory
-        os.makedirs(persist_directory, exist_ok=True)
+        self.persist_directory = persist_directory or settings.chroma_db_path
+        os.makedirs(self.persist_directory, exist_ok=True)
 
-        self.client = chromadb.PersistentClient(path=persist_directory)
+        self.client = chromadb.PersistentClient(path=self.persist_directory)
         self.collection = None
         self.search_cache = SearchCache(max_size=200, ttl_seconds=600)
 
