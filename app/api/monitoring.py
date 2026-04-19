@@ -7,7 +7,7 @@ from app.middleware.rate_limit import get_rate_limit_store, RATE_LIMIT_REQUESTS,
 router = APIRouter()
 
 
-def _get_disk_usage() -> psutil.sdiskusage:
+def _get_disk_usage():
     """跨平台获取系统盘使用率"""
     if os.name == "nt":
         drive = os.path.splitdrive(os.getcwd())[0] or "C:\\"
