@@ -186,6 +186,9 @@ async def chat_order(request: ChatRequest):
                 mode = AgentMemory.detect_mode(msg.content)
                 memory.add_interaction(role=msg.role, content=msg.content, mode=mode)
 
+        # 历史过长时触发LLM压缩，失败则自动降级为规则摘要
+        await memory.compress_old_history()
+
         # ========== 步骤2：获取压缩后的历史 ==========
         compressed_history = memory.get_compressed_history()
 
@@ -255,6 +258,9 @@ async def chat_auto(request: ChatRequest):
                 mode = AgentMemory.detect_mode(msg.content)
                 memory.add_interaction(role=msg.role, content=msg.content, mode=mode)
 
+        # 历史过长时触发LLM压缩，失败则自动降级为规则摘要
+        await memory.compress_old_history()
+
         # ========== 步骤2：获取压缩后的历史用于意图分类 ==========
         compressed_history = memory.get_compressed_history()
 
@@ -313,6 +319,9 @@ async def chat_product(request: ChatRequest):
             if msg.role in ["user", "assistant"]:
                 mode = AgentMemory.detect_mode(msg.content)
                 memory.add_interaction(role=msg.role, content=msg.content, mode=mode)
+
+        # 历史过长时触发LLM压缩，失败则自动降级为规则摘要
+        await memory.compress_old_history()
 
         # ========== 步骤2：获取压缩后的历史 ==========
         compressed_history = memory.get_compressed_history()

@@ -9,8 +9,10 @@ AgentMemory 模块单元测试
 """
 
 import pytest
+import asyncio
 from datetime import datetime
 from app.services.agent_memory import AgentMemory, InteractionRecord
+from app.services.summary_service import SummaryService
 
 
 class TestInteractionRecord:
@@ -385,6 +387,38 @@ class TestAgentMemoryIntegration:
         summarized = memory.get_summarized_turns()
         assert len(summarized) >= 0
 
+    def test_llm_compress_old_history_success(self):
+        """测试超过阈值后触发LLM压缩并裁剪历史。"""
+        memory = AgentMemory()
+        for i in range(16):
+            memory.add_interaction("user", f"消息{i}", mode="general")
+
+        async def fake_summarizer(old_turns, previous_summary):
+            assert len(old_turns) > 0
+            return "用户查过订单并咨询过键盘，预算200元。"
+
+        compressed = asyncio.run(
+            memory.compress_old_history(summarizer=fake_summarizer)
+        )
+        assert compressed is True
+        assert memory.summary_text
+        assert len(memory.history) < 16
+
+    def test_llm_compress_old_history_below_threshold(self):
+        """测试未达阈值不触发LLM压缩。"""
+        memory = AgentMemory()
+        for i in range(6):
+            memory.add_interaction("user", f"短消息{i}", mode="general")
+
+        async def fake_summarizer(old_turns, previous_summary):
+            return "不应调用"
+
+        compressed = asyncio.run(
+            memory.compress_old_history(summarizer=fake_summarizer)
+        )
+        assert compressed is False
+        assert memory.summary_text is None
+
 
 class TestEdgeCases:
     """边界情况测试"""
@@ -450,6 +484,27 @@ class TestEdgeCases:
         record_dict = memory.history[0].to_dict()
         assert record_dict["metadata"]["order_id"] == "ORD123"
         assert record_dict["metadata"]["status"] == "shipped"
+
+    def test_summary_service_fallback(self, monkeypatch):
+        """测试summary_service在LLM失败时回退规则摘要。"""
+        service = SummaryService()
+
+        async def raise_error(*args, **kwargs):
+            raise RuntimeError("mock llm error")
+
+        monkeypatch.setattr(
+            "app.services.summary_service.llm_service.generate_response", raise_error
+        )
+
+        old_turns = [
+            {"role": "user", "content": "帮我查ORD123订单"},
+            {"role": "assistant", "content": "订单已发货"},
+        ]
+        summary = asyncio.run(
+            service.summarize_history(old_turns, previous_summary="历史摘要")
+        )
+        assert summary
+        assert "历史摘要" in summary or "ORD123" in summary
 
 
 if __name__ == "__main__":

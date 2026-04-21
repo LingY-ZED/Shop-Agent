@@ -11,7 +11,7 @@ Agent 记忆管理模块
 
 import logging
 import re
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable, Awaitable
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -87,6 +87,8 @@ class AgentMemory:
     SUMMARY_TURNS_END = 8  # 摘要的最后一轮
     MAX_HISTORY_LENGTH = 20  # 总历史最大轮数
     TARGET_CHAR_LENGTH = 2000  # 目标字符限制
+    LLM_HISTORY_LIMIT = 12  # 超过该阈值触发LLM压缩
+    LLM_COMPRESS_BATCH = 8  # 每次压缩前N条旧记录
 
     ORDER_KEYWORDS = [
         "订单",
@@ -485,6 +487,66 @@ class AgentMemory:
             f"Compressed history: {len(messages)} messages, ~{current_chars} chars"
         )
         return messages
+
+    async def compress_old_history(
+        self,
+        history_limit: Optional[int] = None,
+        compress_batch: Optional[int] = None,
+        summarizer: Optional[
+            Callable[[List[Dict[str, Any]], Optional[str]], Awaitable[str]]
+        ] = None,
+    ) -> bool:
+        """当历史超过阈值时触发LLM摘要压缩，压缩成功返回True。"""
+        history_limit = history_limit or self.LLM_HISTORY_LIMIT
+        compress_batch = compress_batch or self.LLM_COMPRESS_BATCH
+
+        if len(self.history) <= history_limit:
+            return False
+
+        batch_size = min(
+            compress_batch, max(1, len(self.history) - self.FULL_RECENT_TURNS)
+        )
+        old_records = self.history[:batch_size]
+        if not old_records:
+            return False
+
+        old_turns = [
+            {
+                "role": record.role,
+                "content": record.content,
+                "mode": record.mode,
+                "timestamp": record.timestamp.isoformat(),
+            }
+            for record in old_records
+        ]
+
+        summary_text = ""
+        try:
+            if summarizer is None:
+                from app.services.summary_service import summary_service
+
+                summary_text = await summary_service.summarize_history(
+                    old_turns=old_turns,
+                    previous_summary=self.summary_text,
+                )
+            else:
+                summary_text = await summarizer(old_turns, self.summary_text)
+        except Exception as exc:
+            logger.warning(f"LLM历史压缩失败，回退到规则摘要: {exc}")
+            return False
+
+        if not summary_text:
+            return False
+
+        self.summary_text = summary_text.strip()
+        self.history = self.history[batch_size:]
+        self.build_historical_summary()
+        logger.info(
+            "LLM压缩完成: compressed=%s, remaining=%s",
+            batch_size,
+            len(self.history),
+        )
+        return True
 
     def clear(self) -> None:
         """清空所有历史和摘要"""

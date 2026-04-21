@@ -192,10 +192,10 @@ def get_compressed_history(self):
 ```
 
 **Deliverable**：
-- [ ] `summary_service.py` 完成
-- [ ] LLM 压缩端到端测试
-- [ ] 对比：规则压缩 vs LLM压缩的效果
-- [ ] 性能基准：压缩耗时 < 1s
+- [x] `summary_service.py` 完成
+- [x] LLM 压缩端到端测试
+- [x] 对比：规则压缩 vs LLM压缩的效果
+- [x] 性能基准：压缩耗时 < 1s
 
 ---
 
@@ -358,9 +358,9 @@ async def chat_auto(request: ChatRequest, user_id: int = Depends(get_current_use
 - [x] 性能基准稳定（添加到CI/CD）
 
 ### 阶段3 完成标准
-- [ ] 压缩耗时 < 1.0s (P99)
-- [ ] LLM 摘要 vs 规则摘要 对比测试
-- [ ] Token消耗基准再下降10-15%
+- [x] 压缩耗时 < 1.0s (P99)
+- [x] LLM 摘要 vs 规则摘要 对比测试
+- [x] Token消耗基准再下降10-15%
 
 ### 阶段4 完成标准
 - [ ] 迁移脚本测试通过
@@ -400,4 +400,4 @@ async def chat_auto(request: ChatRequest, user_id: int = Depends(get_current_use
 ---
 
 **更新时间**：2026-04-21  
-**状态**：✅ 阶段2已完成
+**状态**：✅ 阶段3已完成
